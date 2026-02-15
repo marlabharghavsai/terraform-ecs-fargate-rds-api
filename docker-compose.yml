@@ -3,6 +3,8 @@ version: '3.8'
 services:
   db:
     image: postgres:13
+    container_name: task12-postgres
+    restart: always
     environment:
       POSTGRES_DB: mydatabase
       POSTGRES_USER: user
@@ -19,6 +21,8 @@ services:
 
   api:
     build: ./api
+    container_name: task12-api
+    restart: always
     ports:
       - "8000:8000"
     environment:
