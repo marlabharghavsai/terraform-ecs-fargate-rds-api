@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 from src.config import engine, SessionLocal
 from src.models import Base, Item
@@ -17,7 +17,7 @@ def startup():
 def health():
     return {"status": "healthy"}
 
-@app.post("/items")
+@app.post("/items", status_code=status.HTTP_201_CREATED)
 def create_item(item: dict):
     db = SessionLocal()
     try:

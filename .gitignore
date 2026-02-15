@@ -5,6 +5,15 @@
 api/venv/
 __pycache__/
 *.pyc
+*.pyd
+*.pyo
 api/venv/
 terraform/.terraform/
 terraform/*.tfstate*
+# Virtual env
+venv/
+# Local DB
+test.db
+*.db
+# OS
+.DS_Store
