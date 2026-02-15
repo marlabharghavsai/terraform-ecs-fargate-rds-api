@@ -3,7 +3,7 @@ variable "project_name" {
 }
 
 variable "db_username" {
-  default = "user"
+  default = "task12admin"
 }
 
 variable "db_password" {

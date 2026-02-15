@@ -129,3 +129,34 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# DB Subnet Group
+resource "aws_db_subnet_group" "db_subnet_group" {
+  name = "task12-db-subnet-group"
+
+  subnet_ids = [
+    aws_subnet.private_1.id,
+    aws_subnet.private_2.id
+  ]
+}
+
+# RDS PostgreSQL Instance
+resource "aws_db_instance" "postgres" {
+  identifier        = "task12-postgres"
+  engine            = "postgres"
+  engine_version    = "13"
+  instance_class    = "db.t3.micro"
+
+  allocated_storage = 20
+
+  db_name  = "mydatabase"
+  username = var.db_username
+  password = var.db_password
+
+  db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+
+  publicly_accessible = false
+  skip_final_snapshot = true
+}
+
+
