@@ -2,3 +2,6 @@
 .terraform
 *.zip
 *.tfstate*
+api/venv/
+__pycache__/
+*.pyc
