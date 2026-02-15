@@ -198,3 +198,94 @@ resource "aws_lb_listener" "listener" {
 }
 
 
+# ECS Task Definition
+resource "aws_ecs_task_definition" "task" {
+  family                   = "task12-api"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "api"
+      image = "936389956084.dkr.ecr.us-east-1.amazonaws.com/task12-api:latest"
+
+      portMappings = [{
+        containerPort = 8000
+        protocol      = "tcp"
+      }]
+
+      environment = [
+        {
+          name  = "DATABASE_URL"
+          value = "postgresql://${var.db_username}:${var.db_password}@${aws_db_instance.postgres.address}:5432/mydatabase"
+        }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name
+          awslogs-region        = "us-east-1"
+          awslogs-stream-prefix = "ecs"
+        }
+      }
+    }
+  ])
+}
+
+# ECS Service
+resource "aws_ecs_service" "service" {
+  name            = "task12-service"
+  cluster         = aws_ecs_cluster.cluster.id
+  task_definition = aws_ecs_task_definition.task.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+
+  network_configuration {
+    assign_public_ip = true
+
+    subnets = [
+      aws_subnet.public_1.id,
+      aws_subnet.public_2.id
+    ]
+
+    security_groups = [aws_security_group.ecs_sg.id]
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.tg.arn
+    container_name   = "api"
+    container_port   = 8000
+  }
+
+  depends_on = [
+    aws_lb_listener.listener,
+    aws_db_instance.postgres
+  ]
+}
+
+
+# Public Route Table
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+}
+
+# Associate Public Subnets
+resource "aws_route_table_association" "public_1_assoc" {
+  subnet_id      = aws_subnet.public_1.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+resource "aws_route_table_association" "public_2_assoc" {
+  subnet_id      = aws_subnet.public_2.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
