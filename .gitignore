@@ -5,3 +5,6 @@
 api/venv/
 __pycache__/
 *.pyc
+api/venv/
+terraform/.terraform/
+terraform/*.tfstate*
